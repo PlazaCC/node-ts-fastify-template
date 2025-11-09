@@ -1,22 +1,22 @@
-import { CreateUserUseCase } from "application/users/create-user.usecase";
-import { FastifyRequest, FastifyReply } from "fastify";
+import { CreateUserUseCase } from '@/application/users/create-user.usecase'
 import {
   CreateUserInput,
   CreateUserOutput,
-} from "presentation/schemas/user.schema";
+} from '@/presentation/schemas/user.schema'
+import { FastifyRequest, FastifyReply } from 'fastify'
 
 export function createUserController(usecase: CreateUserUseCase) {
   return async function (
     request: FastifyRequest<{ Body: CreateUserInput }>,
     reply: FastifyReply<{ Reply: CreateUserOutput }>
   ) {
-    const { name, email, address } = request.body;
+    const { name, email, address } = request.body
 
     const response = await usecase.execute({
       name,
       email,
       address,
-    });
+    })
 
     return reply.status(201).send({
       id: response.id!,
@@ -28,6 +28,6 @@ export function createUserController(usecase: CreateUserUseCase) {
         state: response.address.state,
         zipCode: response.address.zipCode,
       },
-    });
-  };
+    })
+  }
 }

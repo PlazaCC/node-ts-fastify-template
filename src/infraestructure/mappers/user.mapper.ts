@@ -1,6 +1,6 @@
-import { User } from "../../domain/entities/user.entity";
-import { Email } from "../../domain/value-objects/email.vo";
-import { Address } from "../../domain/value-objects/address.vo";
+import { User } from '@/domain/entities/user.entity'
+import { Email } from '@/domain/value-objects/email.vo'
+import { Address } from '@/domain/value-objects/address.vo'
 
 export class UserMapper {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -15,7 +15,7 @@ export class UserMapper {
         state: record.state,
         zipCode: record.zipCode,
       }),
-    });
+    })
   }
 
   static toPersistence(user: User) {
@@ -27,6 +27,6 @@ export class UserMapper {
       city: user.address.city,
       state: user.address.state,
       zipCode: user.address.zipCode,
-    };
+    }
   }
 }
