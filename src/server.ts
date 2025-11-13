@@ -13,8 +13,12 @@ import { fastifySwaggerUi } from '@fastify/swagger-ui'
 import dotenv from 'dotenv'
 import multipart from '@fastify/multipart'
 import { userRoutes } from './users/user.routes'
+import { setupDependencies } from './helpers/di/setup'
 
 dotenv.config({ path: process.env.ENV_FILE || '../.env' })
+
+// Configura as dependências
+setupDependencies()
 
 const server = fastify().withTypeProvider<ZodTypeProvider>()
 
