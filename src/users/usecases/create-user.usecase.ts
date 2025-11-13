@@ -2,13 +2,14 @@ import { UserRepository } from '@/domain/contracts/user.repository'
 import { User } from '@/domain/entities/user.entity'
 import { Email } from '@/domain/value-objects/email.vo'
 import { Address } from '@/domain/value-objects/address.vo'
-import { CreateUserInput } from '@/presentation/schemas/user.schema'
 import { DuplicatedItem } from '@/helpers/errors/errors'
+import { CreateUserInput, CreateUserOutput } from '../dtos/user.schema'
+import { UserMapper } from '@/infraestructure/mappers/user.mapper'
 
 export class CreateUserUseCase {
   constructor(private readonly repo: UserRepository) {}
 
-  async execute(input: CreateUserInput): Promise<User> {
+  async execute(input: CreateUserInput): Promise<CreateUserOutput> {
     const existing = await this.repo.findByEmail(input.email)
     if (existing) throw new DuplicatedItem('Usuário já cadastrado')
 
@@ -18,6 +19,6 @@ export class CreateUserUseCase {
       address: Address.create(input.address),
     })
 
-    return await this.repo.save(user)
+    return UserMapper.toCreateUserOutput(await this.repo.save(user))
   }
 }

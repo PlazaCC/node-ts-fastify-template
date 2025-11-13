@@ -1,9 +1,9 @@
 import { User } from '@/domain/entities/user.entity'
 import { Email } from '@/domain/value-objects/email.vo'
 import { Address } from '@/domain/value-objects/address.vo'
+import { CreateUserOutput } from '@/users/dtos/user.schema'
 
 export class UserMapper {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   static toDomain(record: any): User {
     return new User({
       id: record.id,
@@ -18,15 +18,17 @@ export class UserMapper {
     })
   }
 
-  static toPersistence(user: User) {
+  static toCreateUserOutput(user: User): CreateUserOutput {
     return {
-      id: user.id,
+      id: user.id!,
       name: user.name,
       email: user.email.value,
-      street: user.address.street,
-      city: user.address.city,
-      state: user.address.state,
-      zipCode: user.address.zipCode,
+      address: {
+        street: user.address.street,
+        city: user.address.city,
+        state: user.address.state,
+        zipCode: user.address.zipCode,
+      },
     }
   }
 }

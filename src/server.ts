@@ -12,7 +12,7 @@ import { fastifySwagger } from '@fastify/swagger'
 import { fastifySwaggerUi } from '@fastify/swagger-ui'
 import dotenv from 'dotenv'
 import multipart from '@fastify/multipart'
-import { userRoutes } from './presentation/routes/user.routes'
+import { userRoutes } from './users/user.routes'
 
 dotenv.config({ path: process.env.ENV_FILE || '../.env' })
 

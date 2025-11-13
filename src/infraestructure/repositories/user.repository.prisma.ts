@@ -5,8 +5,16 @@ import { UserRepository } from '@/domain/contracts/user.repository'
 
 export class UserRepositoryPrisma implements UserRepository {
   async save(user: User): Promise<User> {
-    const data = UserMapper.toPersistence(user)
-    const record = await prisma.user.create({ data })
+    const record = await prisma.user.create({
+      data: {
+        name: user.name,
+        email: user.email.value,
+        street: user.address.street,
+        city: user.address.city,
+        state: user.address.state,
+        zipCode: user.address.zipCode,
+      },
+    })
     return UserMapper.toDomain(record)
   }
 
