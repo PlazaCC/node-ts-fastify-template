@@ -34,19 +34,40 @@ Este template foi criado para acelerar o desenvolvimento de APIs robustas e esca
 
 ## 🏗️ Arquitetura
 
-O template segue a **Clean Architecture**, dividindo o código em camadas bem definidas:
+O template segue a **Clean Architecture** com organização modular, dividindo o código em camadas bem definidas:
 
 ```
 ┌─────────────────────────────────────────┐
-│         Presentation Layer              │  ← Controllers, Routes, Schemas
-├─────────────────────────────────────────┤
-│         Application Layer               │  ← Use Cases (Business Logic)
+│      Feature Modules (users/)           │  ← Módulos organizados por funcionalidade
+│  ┌─────────────────────────────────┐   │
+│  │  Controllers (Presentation)     │   │  ← HTTP Handlers
+│  ├─────────────────────────────────┤   │
+│  │  Use Cases (Application)        │   │  ← Business Logic
+│  ├─────────────────────────────────┤   │
+│  │  DTOs/Schemas (Validation)      │   │  ← Input/Output Validation
+│  └─────────────────────────────────┘   │
 ├─────────────────────────────────────────┤
 │         Domain Layer                    │  ← Entities, Value Objects, Contracts
 ├─────────────────────────────────────────┤
-│         Infrastructure Layer            │  ← Repositories, Database, External APIs
+│         Infrastructure Layer            │  ← Repositories, Database, Mappers
 └─────────────────────────────────────────┘
 ```
+
+### Organização Modular (Feature-Based)
+
+Este template utiliza uma **arquitetura modular baseada em funcionalidades** (Feature Modules). Cada módulo (ex: `users/`, `products/`) contém:
+
+- **Use Cases**: Lógica de aplicação específica da funcionalidade
+- **Controllers**: Handlers HTTP para a funcionalidade
+- **DTOs/Schemas**: Validações Zod de entrada e saída
+- **Routes**: Rotas HTTP da funcionalidade
+
+**Vantagens:**
+
+- ✅ Organização por contexto de negócio (não por tipo técnico)
+- ✅ Facilita encontrar código relacionado
+- ✅ Permite crescimento independente de módulos
+- ✅ Ideal para equipes trabalhando em funcionalidades diferentes
 
 ### Princípios Aplicados
 
@@ -70,18 +91,14 @@ src/
 │   └── contracts/            # Interfaces/contratos do domínio
 │       └── user.repository.ts # Contrato que o repositório deve seguir
 │
-├── application/               # 🟩 CAMADA DE APLICAÇÃO (Use Cases)
-│   └── users/
-│       └── create-user.usecase.ts  # Caso de uso: criar usuário
-│
-├── presentation/              # 🟨 CAMADA DE APRESENTAÇÃO (API)
-│   ├── controllers/          # Controllers recebem requests HTTP
-│   │   └── users/
-│   │       └── create-user.controller.ts
-│   ├── routes/              # Definição de rotas da API
-│   │   └── user.routes.ts
-│   └── schemas/             # Schemas Zod para validação de entrada/saída
-│       └── user.schema.ts
+├── users/                     # 🟩 MÓDULO DE USUÁRIOS (Feature Module)
+│   ├── usecases/             # Casos de uso (Application Layer)
+│   │   └── create-user.usecase.ts
+│   ├── controllers/          # Controllers HTTP (Presentation Layer)
+│   │   └── create-user.controller.ts
+│   ├── dtos/                # Schemas Zod para validação
+│   │   └── user.schema.ts
+│   └── user.routes.ts       # Definição de rotas do módulo
 │
 ├── infraestructure/          # 🟧 CAMADA DE INFRAESTRUTURA
 │   ├── repositories/        # Implementações concretas dos repositórios
@@ -93,7 +110,10 @@ src/
 │   └── prisma/             # Configuração do Prisma ORM
 │       └── client.ts
 │
-├── helpers/                 # 🛠️ UTILITÁRIOS E MIDDLEWARES
+├── helpers/                 # 🛠️ UTILITÁRIOS E CONFIGURAÇÕES
+│   ├── config/             # Configurações da aplicação
+│   │   ├── environments.ts # Variáveis de ambiente
+│   │   └── types.ts       # Tipos TypeScript globais
 │   ├── errors/             # Classes de erro customizadas
 │   │   └── errors.ts
 │   ├── enum/               # Enums compartilhados
@@ -102,9 +122,7 @@ src/
 │       ├── error_handler_middleware.ts
 │       └── multipart_middleware.ts
 │
-├── server.ts               # 🚀 Ponto de entrada da aplicação
-├── environments.ts         # 🔧 Configurações de ambiente
-└── types.ts               # 📝 Tipos TypeScript globais
+└── server.ts               # 🚀 Ponto de entrada da aplicação
 
 prisma/
 └── schema.prisma          # Schema do banco de dados
@@ -113,7 +131,9 @@ prisma/
 ### Quando usar cada camada?
 
 #### 🟦 **Domain** (Domínio)
+
 **Quando usar:**
+
 - Definir regras de negócio puras
 - Criar entidades que representam conceitos do negócio
 - Validar dados que são conceitos do domínio (Email, CPF, etc)
@@ -121,26 +141,31 @@ prisma/
 
 **Exemplo:** A validação de que um email deve conter "@" fica na classe `Email` (value object)
 
-#### 🟩 **Application** (Aplicação)
+#### 🟩 **Feature Modules** (Módulos por Funcionalidade - ex: users/)
+
 **Quando usar:**
-- Orquestrar fluxos de negócio (use cases)
-- Coordenar entidades e repositórios
-- Implementar regras de aplicação (ex: "não pode criar usuário duplicado")
-- Não contém detalhes de infraestrutura (HTTP, DB)
 
-**Exemplo:** `CreateUserUseCase` verifica se email já existe antes de criar
+- Organizar código por funcionalidade/domínio
+- Agrupar use cases, controllers, DTOs e rotas relacionadas
+- Facilitar navegação e manutenção do código
+- Cada módulo contém sua própria camada de aplicação e apresentação
 
-#### 🟨 **Presentation** (Apresentação)
-**Quando usar:**
-- Receber requisições HTTP
-- Validar formato dos dados de entrada (schemas)
-- Retornar respostas HTTP formatadas
-- Documentar endpoints da API
+**Estrutura de um módulo:**
 
-**Exemplo:** `CreateUserController` recebe o body da requisição e chama o use case
+```
+users/
+├── usecases/          # Lógica de aplicação (Use Cases)
+├── controllers/       # Handlers HTTP
+├── dtos/             # Schemas de validação (Zod)
+└── user.routes.ts    # Rotas do módulo
+```
+
+**Exemplo:** O módulo `users/` agrupa tudo relacionado a usuários
 
 #### 🟧 **Infrastructure** (Infraestrutura)
+
 **Quando usar:**
+
 - Implementar acesso ao banco de dados
 - Integrar com APIs externas
 - Implementar serviços de email, storage, etc
@@ -153,22 +178,26 @@ prisma/
 ## 🛠️ Tecnologias
 
 ### Core
+
 - **[Node.js](https://nodejs.org/)** - Runtime JavaScript
 - **[TypeScript](https://www.typescriptlang.org/)** - Superset tipado do JavaScript
 - **[Fastify](https://fastify.dev/)** - Framework web de alta performance
 - **[Prisma](https://www.prisma.io/)** - ORM moderno para TypeScript
 
 ### Validação e Documentação
+
 - **[Zod](https://zod.dev/)** - Schema validation com inferência de tipos
 - **[Fastify Swagger](https://github.com/fastify/fastify-swagger)** - Documentação OpenAPI automática
 - **[fastify-type-provider-zod](https://github.com/turkerdev/fastify-type-provider-zod)** - Integração Zod + Fastify
 
 ### Qualidade de Código
+
 - **[ESLint](https://eslint.org/)** - Linter para JavaScript/TypeScript
 - **[Prettier](https://prettier.io/)** - Formatador de código
 - **[Vitest](https://vitest.dev/)** - Framework de testes unitários
 
 ### Desenvolvimento
+
 - **[tsx](https://github.com/esbuild-kit/tsx)** - Executor TypeScript com hot reload
 - **[Docker](https://www.docker.com/)** - Container para banco de dados local
 
@@ -307,6 +336,204 @@ yarn test
 
 ## 💡 Uso e Exemplos
 
+### Criar um novo módulo
+
+Para criar um novo módulo de funcionalidade (ex: `products/`):
+
+#### 1. Crie a estrutura de pastas
+
+```
+src/
+└── products/
+    ├── usecases/
+    ├── controllers/
+    ├── dtos/
+    └── product.routes.ts
+```
+
+#### 2. Defina o contrato no domínio
+
+```typescript
+// src/domain/contracts/product.repository.ts
+import { Product } from '@/domain/entities/product.entity'
+
+export interface ProductRepository {
+  save(product: Product): Promise<Product>
+  findById(id: string): Promise<Product | null>
+  findAll(): Promise<Product[]>
+}
+```
+
+#### 3. Crie a entidade de domínio
+
+```typescript
+// src/domain/entities/product.entity.ts
+export interface ProductProps {
+  id?: string
+  name: string
+  price: number
+  description?: string
+}
+
+export class Product {
+  readonly id?: string
+  readonly name: string
+  readonly price: number
+  readonly description?: string
+
+  constructor(props: ProductProps) {
+    if (!props.name) throw new Error('Nome é obrigatório')
+    if (props.price <= 0) throw new Error('Preço deve ser positivo')
+
+    this.id = props.id
+    this.name = props.name
+    this.price = props.price
+    this.description = props.description
+  }
+}
+```
+
+#### 4. Implemente o repositório
+
+```typescript
+// src/infraestructure/repositories/product.repository.prisma.ts
+import { prisma } from '../prisma/client'
+import { Product } from '@/domain/entities/product.entity'
+import { ProductRepository } from '@/domain/contracts/product.repository'
+
+export class ProductRepositoryPrisma implements ProductRepository {
+  async save(product: Product): Promise<Product> {
+    const data = await prisma.product.create({
+      data: {
+        name: product.name,
+        price: product.price,
+        description: product.description,
+      },
+    })
+    return new Product(data)
+  }
+
+  async findById(id: string): Promise<Product | null> {
+    const record = await prisma.product.findUnique({ where: { id } })
+    return record ? new Product(record) : null
+  }
+
+  async findAll(): Promise<Product[]> {
+    const records = await prisma.product.findMany()
+    return records.map((r) => new Product(r))
+  }
+}
+```
+
+#### 5. Crie os schemas de validação
+
+```typescript
+// src/products/dtos/product.schema.ts
+import { z } from 'zod'
+
+export const createProductInputDto = z
+  .object({
+    name: z.string().min(3),
+    price: z.number().positive(),
+    description: z.string().optional(),
+  })
+  .strict()
+
+export const productOutputDto = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  price: z.number(),
+  description: z.string().optional(),
+})
+
+export type CreateProductInput = z.infer<typeof createProductInputDto>
+export type ProductOutput = z.infer<typeof productOutputDto>
+```
+
+#### 6. Implemente o use case
+
+```typescript
+// src/products/usecases/create-product.usecase.ts
+import { ProductRepository } from '@/domain/contracts/product.repository'
+import { Product } from '@/domain/entities/product.entity'
+import { CreateProductInput } from '../dtos/product.schema'
+
+export class CreateProductUseCase {
+  constructor(private readonly repo: ProductRepository) {}
+
+  async execute(input: CreateProductInput): Promise<Product> {
+    const product = new Product({
+      name: input.name,
+      price: input.price,
+      description: input.description,
+    })
+
+    return await this.repo.save(product)
+  }
+}
+```
+
+#### 7. Crie o controller
+
+```typescript
+// src/products/controllers/create-product.controller.ts
+import { CreateProductUseCase } from '../usecases/create-product.usecase'
+import { CreateProductInput, ProductOutput } from '../dtos/product.schema'
+import { FastifyRequest, FastifyReply } from 'fastify'
+
+export function createProductController(usecase: CreateProductUseCase) {
+  return async function (
+    request: FastifyRequest<{ Body: CreateProductInput }>,
+    reply: FastifyReply
+  ) {
+    const product = await usecase.execute(request.body)
+    return reply.status(201).send(product)
+  }
+}
+```
+
+#### 8. Registre as rotas
+
+```typescript
+// src/products/product.routes.ts
+import { FastifyTypedInstance } from '@/helpers/config/types'
+import { ProductRepositoryPrisma } from '@/infraestructure/repositories/product.repository.prisma'
+import { createProductController } from './controllers/create-product.controller'
+import { CreateProductUseCase } from './usecases/create-product.usecase'
+import { createProductInputDto, productOutputDto } from './dtos/product.schema'
+
+export async function productRoutes(server: FastifyTypedInstance) {
+  const productRepository = new ProductRepositoryPrisma()
+  const createProductUseCase = new CreateProductUseCase(productRepository)
+
+  server.post(
+    '/',
+    {
+      schema: {
+        tags: ['Products'],
+        description: 'Create a new product',
+        body: createProductInputDto,
+        response: {
+          201: productOutputDto,
+        },
+      },
+    },
+    createProductController(createProductUseCase)
+  )
+}
+```
+
+#### 9. Registre no servidor
+
+```typescript
+// src/server.ts
+import { productRoutes } from './products/product.routes'
+
+// ... outras configurações
+
+server.register(productRoutes, { prefix: '/products' })
+```
+
 ### Criar um novo endpoint
 
 Vamos criar um endpoint para **listar usuários**:
@@ -316,15 +543,15 @@ Vamos criar um endpoint para **listar usuários**:
 ```typescript
 // src/domain/contracts/user.repository.ts
 export interface UserRepository {
-  findAll(): Promise<User[]>  // ← Adicione este método
+  findAll(): Promise<User[]> // ← Adicione este método
   // ... outros métodos
 }
 ```
 
-#### 2. **Application** - Crie o Use Case
+#### 2. **Use Cases** - Crie o Use Case no módulo
 
 ```typescript
-// src/application/users/list-users.usecase.ts
+// src/users/usecases/list-users.usecase.ts
 import { UserRepository } from '@/domain/contracts/user.repository'
 import { User } from '@/domain/entities/user.entity'
 
@@ -347,50 +574,56 @@ async findAll(): Promise<User[]> {
 }
 ```
 
-#### 4. **Presentation** - Crie o schema
+#### 4. **DTOs** - Crie o schema de validação
 
 ```typescript
-// src/presentation/schemas/user.schema.ts
+// src/users/dtos/user.schema.ts
 export const listUsersOutputSchema = z.array(userSchema)
 export type ListUsersOutput = z.infer<typeof listUsersOutputSchema>
 ```
 
-#### 5. **Presentation** - Crie o controller
+#### 5. **Controllers** - Crie o controller
 
 ```typescript
-// src/presentation/controllers/users/list-users.controller.ts
-import { ListUsersUseCase } from '@/application/users/list-users.usecase'
+// src/users/controllers/list-users.controller.ts
+import { ListUsersUseCase } from '@/users/usecases/list-users.usecase'
 import { FastifyReply, FastifyRequest } from 'fastify'
 
 export function listUsersController(usecase: ListUsersUseCase) {
   return async function (request: FastifyRequest, reply: FastifyReply) {
     const users = await usecase.execute()
-    
-    return reply.status(200).send(
-      users.map(u => ({
-        id: u.id!,
-        name: u.name,
-        email: u.email.value,
-        address: u.address
-      }))
-    )
+
+    return reply.status(200).send(users)
   }
 }
 ```
 
-#### 6. **Presentation** - Registre a rota
+#### 6. **Routes** - Registre a rota no módulo
 
 ```typescript
-// src/presentation/routes/user.routes.ts
-server.get('/', {
-  schema: {
-    tags: ['Users'],
-    description: 'List all users',
-    response: {
-      200: listUsersOutputSchema
-    }
-  }
-}, listUsersController(new ListUsersUseCase(userRepository)))
+// src/users/user.routes.ts
+import { listUsersController } from './controllers/list-users.controller'
+import { ListUsersUseCase } from './usecases/list-users.usecase'
+import { FastifyTypedInstance } from '@/helpers/config/types'
+
+export async function userRoutes(server: FastifyTypedInstance) {
+  const userRepository = new UserRepositoryMock()
+  const listUsersUseCase = new ListUsersUseCase(userRepository)
+
+  server.get(
+    '/',
+    {
+      schema: {
+        tags: ['Users'],
+        description: 'List all users',
+        response: {
+          200: listUsersOutputSchema,
+        },
+      },
+    },
+    listUsersController(listUsersUseCase)
+  )
+}
 ```
 
 ### Criar um novo Value Object
@@ -402,15 +635,15 @@ export class CPF {
 
   static create(value: string): CPF {
     const cleaned = value.replace(/\D/g, '')
-    
+
     if (cleaned.length !== 11) {
       throw new Error('CPF deve ter 11 dígitos')
     }
-    
+
     if (!this.isValid(cleaned)) {
       throw new Error('CPF inválido')
     }
-    
+
     return new CPF(cleaned)
   }
 
@@ -433,7 +666,7 @@ export class CPF {
 ### Tratar erros customizados
 
 ```typescript
-// src/application/users/create-user.usecase.ts
+// src/users/usecases/create-user.usecase.ts
 import { DuplicatedItem, EntityError } from '@/helpers/errors/errors'
 
 export class CreateUserUseCase {
@@ -441,14 +674,14 @@ export class CreateUserUseCase {
     // Valida regra de negócio
     const existing = await this.repo.findByEmail(input.email)
     if (existing) {
-      throw new DuplicatedItem('Usuário já cadastrado')  // HTTP 409
+      throw new DuplicatedItem('Usuário já cadastrado') // HTTP 409
     }
 
     try {
       const user = new User({ ...input })
       return await this.repo.save(user)
     } catch (error) {
-      throw new EntityError('Erro ao criar usuário')  // HTTP 400
+      throw new EntityError('Erro ao criar usuário') // HTTP 400
     }
   }
 }
@@ -462,17 +695,17 @@ Os erros são automaticamente tratados pelo middleware `error_handler_middleware
 
 ### Variáveis de Ambiente
 
-Edite o arquivo `src/environments.ts` para adicionar novas variáveis:
+Edite o arquivo `src/helpers/config/environments.ts` para adicionar novas variáveis:
 
 ```typescript
 export class Environments {
   static stage: STAGE = (process.env.STAGE as STAGE) || STAGE.DEV
-  
+
   static database_url: string = process.env.DATABASE_URL || 'postgres://...'
-  
+
   // Adicione suas variáveis aqui
   static jwtSecret: string = process.env.JWT_SECRET || 'default-secret'
-  
+
   static awsRegion: string = process.env.AWS_REGION || 'us-east-1'
 }
 ```
@@ -517,7 +750,7 @@ Edite `src/server.ts` para configurar CORS:
 server.register(fastifyCors, {
   origin: ['https://seudominio.com', 'http://localhost:3001'],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
+  credentials: true,
 })
 ```
 
@@ -528,9 +761,9 @@ server.register(fastifyCors, {
 ### Estrutura de Testes
 
 ```typescript
-// src/application/users/__tests__/create-user.usecase.spec.ts
+// src/users/__tests__/create-user.usecase.spec.ts
 import { describe, it, expect, beforeEach } from 'vitest'
-import { CreateUserUseCase } from '../create-user.usecase'
+import { CreateUserUseCase } from '../usecases/create-user.usecase'
 import { UserRepositoryMock } from '@/infraestructure/mocks/user.repository.mock'
 
 describe('CreateUserUseCase', () => {
@@ -550,8 +783,8 @@ describe('CreateUserUseCase', () => {
         street: 'Main St',
         city: 'São Paulo',
         state: 'SP',
-        zipCode: '01000000'
-      }
+        zipCode: '01000000',
+      },
     }
 
     const user = await usecase.execute(input)
@@ -561,13 +794,15 @@ describe('CreateUserUseCase', () => {
   })
 
   it('should throw error if email already exists', async () => {
-    const input = { /* ... */ }
-    
+    const input = {
+      /* ... */
+    }
+
     await usecase.execute(input)
 
-    await expect(usecase.execute(input))
-      .rejects
-      .toThrow('Usuário já cadastrado')
+    await expect(usecase.execute(input)).rejects.toThrow(
+      'Usuário já cadastrado'
+    )
   })
 })
 ```
@@ -592,20 +827,24 @@ yarn test --coverage
 ### 1. Mantenha as camadas independentes
 
 ❌ **Evite:**
+
 ```typescript
 // Use Case conhecendo detalhes de HTTP
 export class CreateUserUseCase {
-  async execute(request: FastifyRequest) {  // ❌ Acoplamento com Fastify
+  async execute(request: FastifyRequest) {
+    // ❌ Acoplamento com Fastify
     // ...
   }
 }
 ```
 
 ✅ **Faça:**
+
 ```typescript
 // Use Case recebe apenas dados
 export class CreateUserUseCase {
-  async execute(input: CreateUserInput) {  // ✅ Desacoplado
+  async execute(input: CreateUserInput) {
+    // ✅ Desacoplado
     // ...
   }
 }
@@ -614,15 +853,17 @@ export class CreateUserUseCase {
 ### 2. Use Value Objects para validações de domínio
 
 ❌ **Evite:**
+
 ```typescript
 class User {
   constructor(public email: string) {
-    if (!email.includes('@')) throw new Error('Invalid')  // Validação na entidade
+    if (!email.includes('@')) throw new Error('Invalid') // Validação na entidade
   }
 }
 ```
 
 ✅ **Faça:**
+
 ```typescript
 class Email {
   static create(value: string): Email {
@@ -632,25 +873,27 @@ class Email {
 }
 
 class User {
-  constructor(public email: Email) {}  // Email já validado
+  constructor(public email: Email) {} // Email já validado
 }
 ```
 
 ### 3. Injete dependências
 
 ❌ **Evite:**
+
 ```typescript
 class CreateUserUseCase {
   async execute() {
-    const repo = new UserRepositoryPrisma()  // ❌ Acoplamento forte
+    const repo = new UserRepositoryPrisma() // ❌ Acoplamento forte
   }
 }
 ```
 
 ✅ **Faça:**
+
 ```typescript
 class CreateUserUseCase {
-  constructor(private repo: UserRepository) {}  // ✅ Injeção de dependência
+  constructor(private repo: UserRepository) {} // ✅ Injeção de dependência
 }
 ```
 
@@ -668,8 +911,8 @@ export class UserMapper {
         street: record.street,
         city: record.city,
         state: record.state,
-        zipCode: record.zipCode
-      })
+        zipCode: record.zipCode,
+      }),
     })
   }
 
@@ -681,7 +924,7 @@ export class UserMapper {
       street: user.address.street,
       city: user.address.city,
       state: user.address.state,
-      zipCode: user.address.zipCode
+      zipCode: user.address.zipCode,
     }
   }
 }
@@ -690,14 +933,16 @@ export class UserMapper {
 ### 5. Schemas Zod para validação de API
 
 ```typescript
-// src/presentation/schemas/product.schema.ts
+// src/users/dtos/product.schema.ts
 import { z } from 'zod'
 
-export const createProductInputSchema = z.object({
-  name: z.string().min(3).max(100),
-  price: z.number().positive(),
-  description: z.string().optional()
-}).strict()
+export const createProductInputSchema = z
+  .object({
+    name: z.string().min(3).max(100),
+    price: z.number().positive(),
+    description: z.string().optional(),
+  })
+  .strict()
 
 export type CreateProductInput = z.infer<typeof createProductInputSchema>
 ```
@@ -744,6 +989,7 @@ Sim, use cases representam intenções do usuário/sistema. Mesmo operações si
 ### Posso usar MongoDB ao invés de PostgreSQL?
 
 Sim! Basta:
+
 1. Trocar o provider no `schema.prisma` para `mongodb`
 2. Atualizar a `DATABASE_URL`
 3. Executar `yarn migrate:dev`

@@ -1,11 +1,6 @@
 import { UserRepositoryMock } from '@/infraestructure/mocks/user.repository.mock'
-import { FastifyTypedInstance } from '@/types'
-import {
-  CreateUserInput,
-  createUserInputDto,
-  CreateUserOutput,
-  createUserOutputDto,
-} from './dtos/user.schema'
+import { FastifyTypedInstance } from '@/helpers/config/types'
+import { createUserInputDto, createUserOutputDto } from './dtos/user.schema'
 import { CreateUserUseCase } from '@/users/usecases/create-user.usecase'
 import { createUserController } from './controllers/create-user.controller'
 
