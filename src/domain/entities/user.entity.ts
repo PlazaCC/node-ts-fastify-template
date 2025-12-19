@@ -1,6 +1,6 @@
 import { Email } from '../value-objects/email.vo'
 import { Address } from '../value-objects/address.vo'
-import { EntityError } from '@/helpers/errors/errors'
+import { DomainError } from '../errors/domain.error'
 
 export interface UserProps {
   id?: string
@@ -16,10 +16,20 @@ export class User {
   readonly address: Address
 
   constructor(props: UserProps) {
-    if (!props.name) throw new EntityError('Nome é obrigatório')
+    this.validateName(props.name)
     this.id = props.id
     this.name = props.name
     this.email = props.email
     this.address = props.address
+  }
+
+  private validateName(name: string) {
+    if (name.length < 2) {
+      throw new DomainError('Nome deve ter pelo menos 2 caracteres')
+    }
+
+    if (name.length > 100) {
+      throw new DomainError('Nome deve ter no máximo 100 caracteres')
+    }
   }
 }

@@ -1,18 +1,28 @@
-export class Email {
-  private constructor(readonly value: string) {}
+import { DomainError } from '../errors/domain.error'
 
-  static create(value: string): Email {
-    if (!value || !value.includes("@") || value.length < 5) {
-      throw new Error("Email inválido");
-    }
-    return new Email(value.toLowerCase());
+export class Email {
+  private readonly value: string
+
+  private constructor(value: string) {
+    this.validate(value)
+    this.value = value.toLowerCase()
   }
 
-  equals(other: string): boolean {
-    return this.value === other;
+  static create(value: string): Email {
+    return new Email(value)
+  }
+
+  private validate(email: string): void {
+    if (!email || !email.includes('@') || email.length < 5) {
+      throw new DomainError('Email inválido')
+    }
+  }
+
+  equals(other: Email): boolean {
+    return this.value === other.toString()
   }
 
   toString(): string {
-    return this.value;
+    return this.value
   }
 }
