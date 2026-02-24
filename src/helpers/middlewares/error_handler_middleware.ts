@@ -1,7 +1,14 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { FastifyInstance, FastifyError } from 'fastify'
 import { ZodError } from 'zod'
 import { BaseError } from '../errors/errors'
+
+interface ValidationIssue {
+  message: string
+}
+
+interface FastifyValidationError {
+  validation?: ValidationIssue[]
+}
 
 export function registerErrorHandler(fastify: FastifyInstance): void {
   fastify.setErrorHandler(
@@ -10,11 +17,13 @@ export function registerErrorHandler(fastify: FastifyInstance): void {
       const timestamp = new Date().toISOString()
 
       // 1️⃣ Erros de validação (Zod ou Fastify core)
-      if (error instanceof ZodError || (error as any).validation) {
+      const fastifyValidation = error as FastifyValidationError
+
+      if (error instanceof ZodError || fastifyValidation.validation) {
         const messages =
           error instanceof ZodError
             ? error.errors.map((e) => e.message)
-            : (error as any).validation.map((v: any) => v.message)
+            : fastifyValidation.validation?.map((v) => v.message)
 
         return reply.status(400).send({
           error: 'BadRequest',

@@ -1,7 +1,3 @@
-import { config } from 'dotenv'
-import path from 'path'
-config({ path: path.resolve(__dirname, '.env.example') })
-
 export const PAGINATION_LIMIT = 20
 
 export enum STAGE {

@@ -21,9 +21,9 @@ dotenv.config({ path: process.env.ENV_FILE || '../.env' })
 
 const server = fastify().withTypeProvider<ZodTypeProvider>()
 const userRepository =
-  Environments.stage === STAGE.PROD
-    ? new UserRepositoryPrisma()
-    : new UserRepositoryMock()
+  Environments.stage === STAGE.TEST
+    ? new UserRepositoryMock()
+    : new UserRepositoryPrisma()
 
 server.setValidatorCompiler(validatorCompiler)
 server.setSerializerCompiler(serializerCompiler)
