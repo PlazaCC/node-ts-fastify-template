@@ -1,58 +1,13 @@
 import 'reflect-metadata'
-import { fastify } from 'fastify'
-import { registerErrorHandler } from './helpers/middlewares/error_handler_middleware'
-import { fastifyCors } from '@fastify/cors'
-import {
-  jsonSchemaTransform,
-  serializerCompiler,
-  validatorCompiler,
-  ZodTypeProvider,
-} from 'fastify-type-provider-zod'
-import { fastifySwagger } from '@fastify/swagger'
-import { fastifySwaggerUi } from '@fastify/swagger-ui'
 import dotenv from 'dotenv'
-import multipart from '@fastify/multipart'
-import { userRoutes } from './users/user.routes'
-import { setupDependencies } from './helpers/di/setup'
+import { Environments, STAGE } from './helpers/config/environments'
+import { createUserRepository } from './composition/user-repository.factory'
+import { buildApp } from './app'
 
 dotenv.config({ path: process.env.ENV_FILE || '../.env' })
 
-// Configura as dependências
-setupDependencies()
-
-const server = fastify().withTypeProvider<ZodTypeProvider>()
-
-server.setValidatorCompiler(validatorCompiler)
-server.setSerializerCompiler(serializerCompiler)
-server.register(multipart)
-
-server.register(fastifyCors, {
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-})
-
-server.get('/', async () => {
-  return 'Node Typescript Fastify Template is running'
-})
-
-server.register(fastifySwagger, {
-  openapi: {
-    info: {
-      title: 'Node Typescript Fastify Template API',
-      description: 'API Template',
-      version: '1.0.0',
-    },
-  },
-  transform: jsonSchemaTransform,
-})
-
-server.register(fastifySwaggerUi, {
-  routePrefix: '/docs',
-})
-
-server.register(userRoutes, { prefix: '/users' })
-
-registerErrorHandler(server)
+const dependencies = createUserRepository(Environments.stage || STAGE.DEV)
+const server = buildApp(dependencies)
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 3000
 
@@ -69,4 +24,4 @@ const start = async () => {
   }
 }
 
-start()
+void start()
