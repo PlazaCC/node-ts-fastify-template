@@ -15,11 +15,45 @@ export class User {
   readonly email: Email
   readonly address: Address
 
-  constructor(props: UserProps) {
-    if (!props.name) throw new EntityError('Nome é obrigatório')
+  private constructor(props: UserProps) {
     this.id = props.id
     this.name = props.name
     this.email = props.email
     this.address = props.address
+  }
+
+  static create(props: Omit<UserProps, 'id'>): User {
+    const normalizedName = props.name.trim()
+
+    if (!normalizedName) {
+      throw new EntityError('Nome é obrigatório')
+    }
+
+    return new User({
+      ...props,
+      name: normalizedName,
+    })
+  }
+
+  static rehydrate(props: UserProps): User {
+    if (!props.id) {
+      throw new EntityError('Id é obrigatório para rehidratar usuário')
+    }
+
+    return User.create(props)
+  }
+
+  toPrimitives() {
+    return {
+      id: this.id,
+      name: this.name,
+      email: this.email.value,
+      address: {
+        street: this.address.street,
+        city: this.address.city,
+        state: this.address.state,
+        zipCode: this.address.zipCode,
+      },
+    }
   }
 }

@@ -7,6 +7,10 @@ import { DuplicatedItem } from '@/helpers/errors/errors'
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library'
 
 export class UserRepositoryPrisma implements UserRepository {
+  async disconnect(): Promise<void> {
+    await prisma.$disconnect()
+  }
+
   async save(user: User): Promise<User> {
     try {
       const record = await prisma.user.create({
@@ -52,7 +56,7 @@ export class UserRepositoryPrisma implements UserRepository {
     state: string
     zipCode: string
   }): User {
-    return new User({
+    return User.rehydrate({
       id: record.id,
       name: record.name,
       email: Email.create(record.email),

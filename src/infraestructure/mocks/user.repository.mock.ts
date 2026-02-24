@@ -15,9 +15,11 @@ export class UserRepositoryMock implements UserRepository {
       throw new DuplicatedItem('Usuário já cadastrado')
     }
 
-    const userWithId = new User({
-      ...user,
+    const userWithId = User.rehydrate({
       id: uuid(),
+      name: user.name,
+      email: user.email,
+      address: user.address,
     })
     this.users.push(userWithId)
     return Promise.resolve(userWithId)
