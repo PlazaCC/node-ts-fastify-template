@@ -20,13 +20,5 @@ export const createUserInputDto = userSchema.omit({ id: true }).strict()
 // ✅ Saída de criação
 export const createUserOutputDto = userSchema
 
-// ✅ Entrada e saída da listagem
-export const getUserByIdInputDto = userSchema.pick({ id: true }).strict()
-
-export const getUserByIdOutputDto = userSchema
-
 export type CreateUserInput = z.infer<typeof createUserInputDto>
 export type CreateUserOutput = z.infer<typeof createUserOutputDto>
-
-export type GetUserByIdInput = z.infer<typeof getUserByIdInputDto>
-export type GetUserByIdOutput = z.infer<typeof getUserByIdOutputDto>

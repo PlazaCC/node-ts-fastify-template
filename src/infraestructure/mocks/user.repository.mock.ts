@@ -1,11 +1,20 @@
 import { UserRepository } from '@/domain/contracts/user.repository'
 import { User } from '@/domain/entities/user.entity'
 import { v4 as uuid } from 'uuid'
+import { DuplicatedItem } from '@/helpers/errors/errors'
 
 export class UserRepositoryMock implements UserRepository {
   users: User[] = []
 
   save(user: User): Promise<User> {
+    const alreadyExists = this.users.some(
+      (existingUser) => existingUser.email.value === user.email.value
+    )
+
+    if (alreadyExists) {
+      throw new DuplicatedItem('Usuário já cadastrado')
+    }
+
     const userWithId = new User({
       ...user,
       id: uuid(),

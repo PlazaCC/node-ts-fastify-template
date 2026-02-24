@@ -13,14 +13,17 @@ import { fastifySwaggerUi } from '@fastify/swagger-ui'
 import dotenv from 'dotenv'
 import multipart from '@fastify/multipart'
 import { userRoutes } from './users/user.routes'
-import { setupDependencies } from './helpers/di/setup'
+import { Environments, STAGE } from './helpers/config/environments'
+import { UserRepositoryPrisma } from './infraestructure/repositories/user.repository.prisma'
+import { UserRepositoryMock } from './infraestructure/mocks/user.repository.mock'
 
 dotenv.config({ path: process.env.ENV_FILE || '../.env' })
 
-// Configura as dependências
-setupDependencies()
-
 const server = fastify().withTypeProvider<ZodTypeProvider>()
+const userRepository =
+  Environments.stage === STAGE.PROD
+    ? new UserRepositoryPrisma()
+    : new UserRepositoryMock()
 
 server.setValidatorCompiler(validatorCompiler)
 server.setSerializerCompiler(serializerCompiler)
@@ -50,7 +53,10 @@ server.register(fastifySwaggerUi, {
   routePrefix: '/docs',
 })
 
-server.register(userRoutes, { prefix: '/users' })
+server.register(userRoutes, {
+  prefix: '/users',
+  userRepository,
+})
 
 registerErrorHandler(server)
 
